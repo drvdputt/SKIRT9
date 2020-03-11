@@ -103,7 +103,7 @@ class MonteCarloSimulation : public Simulation
                          "simulationModeDustEmissionWithSelfAbsorption:"
                          "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption;"
                          "simulationModeDustGasConsistent:"
-                         "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption,GasEmission")
+                         "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption,GasMedium,GasEmission")
 
         PROPERTY_ITEM(cosmology, Cosmology, "the cosmology parameters")
         ATTRIBUTE_DEFAULT_VALUE(cosmology, "LocalUniverseCosmology")
