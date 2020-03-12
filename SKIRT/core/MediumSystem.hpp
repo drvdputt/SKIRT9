@@ -397,7 +397,6 @@ public:
         radiation field. This changes the total absorption and exctinction opacity throughout the
         medium. */
     void updateGas();
-    void gasTest();
 
     //================== Private Types and Functions ====================
 

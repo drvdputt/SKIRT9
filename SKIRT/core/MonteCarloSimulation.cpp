@@ -77,8 +77,6 @@ void MonteCarloSimulation::runSimulation()
 
         // secondary emission segment
         if (_config->hasSecondaryEmission()) runSecondaryEmission();
-
-        _mediumSystem->gasTest();
     }
 
     // write final output

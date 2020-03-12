@@ -4,6 +4,7 @@
 ///////////////////////////////////////////////////////////////// */
 
 #include "SimulationItemRegistry.hpp"
+#include "GasProbe.hpp"
 #include "ItemRegistry.hpp"
 #include "SkirtUnitDef.hpp"
 
@@ -597,6 +598,7 @@ SimulationItemRegistry::SimulationItemRegistry(string version, string format)
     ItemRegistry::add<DustAbsorptionPerCellProbe>();
     ItemRegistry::add<DustEmissivityProbe>();
     ItemRegistry::add<DustEmissionWavelengthGridProbe>();
+    ItemRegistry::add<GasProbe>();
 
     // Monte Carlo simulations
     ItemRegistry::add<MonteCarloSimulation>();
