@@ -22,7 +22,11 @@ void GasProbe::probeRun()
         return;
     }
     TextOutFile file(this, "gas", "gas properties per cell");
-    for (auto s : {"index", "x", "y", "z", "T", "np", "nH", "nH2"}) file.addColumn(s, "", 'd');
+    file.addColumn("index", "", 'd');
+    for (auto s : {"x", "y", "z"}) file.addColumn(s, "m", 'e');
+    file.addColumn("T", "K", 'e');
+    for (auto s : {"np", "nH", "nH2"}) file.addColumn(s, "cm-3", 'e');
+
     int numCells = grid->numCells();
     for (int m = 0; m < numCells; m++)
     {
