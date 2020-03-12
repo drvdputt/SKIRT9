@@ -729,7 +729,7 @@ void MediumSystem::gasTest()
         for (int m = 0; m < _numCells; m++)
         {
             Position p = _grid->centralPositionInCell(m);
-            double T = Gas::gasTemperature(m);
+            double T = Gas::temperature(m);
             file.writeRow(vector<double>{static_cast<double>(m), p.x(), p.y(), p.z(), T});
         }
         file.close();

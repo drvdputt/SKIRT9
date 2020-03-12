@@ -69,8 +69,17 @@ public:
         over to a different variable; something like that should be implemented here. */
     static void clearResults();
 
-    /** This function returns the gas temperature that resulted from \c updateGasState(). */
-    static double gasTemperature(int m);
+    /** This function returns the gas temperature for cell m that resulted from \c updateGasState(m). */
+    static double temperature(int m);
+
+    /** This function returns the density of H+ in cell m that resulted from \c updateGasState(m). */
+    static double np(int m);
+
+    /** This function returns the density of H atoms in cell m that resulted from \c updateGasState(m). */
+    static double nH(int m);
+
+    /** This function returns the density of H2 molecules in cell m that resulted from \c updateGasState(m). */
+    static double nH2(int m);
 
     /** This function calculates the opacity of the gas at a given wavelength for state \c m. If \c
         updateGasState() has not yet been called for cell \c m, the return value will be 0. Behind

@@ -13,26 +13,38 @@
 #    include <chrono>
 #    include <iostream>
 #    include <vector>
+#endif
+
+// note: (at least) all code using stuff related to GasInterface or the GasState vector should be
+// wrapped in ifdef BUILD_WITH_GAS. The rest can be compiled and remain uninitialized. (Leaving the
+// rest be might help a bit with the proliferation of macro's here.
+
 namespace
 {
     // set during initialize
     // ---------------------
 
-    Array _lambdav;                         // wavelengths given at initialization
-    Array _olambdav;                        // wavelengths for determining the index in the opacity table
-    Array _elambdav;                        // wavelengths for calculating the emission
-    GasModule::GasInterface* _gi;           // instance of GasInterface
+    Array _lambdav;   // wavelengths given at initialization
+    Array _olambdav;  // wavelengths for determining the index in the opacity table
+    Array _elambdav;  // wavelengths for calculating the emission
+#ifdef BUILD_WITH_GAS
+    GasModule::GasInterface* _gi;  // instance of GasInterface
+#endif
     std::vector<Gas::DustInfo> _dustinfov;  // information about the dust populations in the simulation
+    int _ip{-1}, _iH{-1}, _iH2{-1};         // indices to retrieve densities from gas states
 
-    // set per cell during updateGasState
-    // ----------------------------------
+// set per cell during updateGasState
+// ----------------------------------
+#ifdef BUILD_WITH_GAS
     std::vector<GasModule::GasState> _statev;  // result of the equilibrium calculation for each cell
-    Table<2> _opacityvv;                       // opacity(m, ell) for each cell m and wavelength ell
+#endif
+    Table<2> _opacityvv;  // opacity(m, ell) for each cell m and wavelength ell
 
-    // utility functions
-    // -----------------
+// utility functions
+// -----------------
 
-    // translate a SKIRT grain type into one of the built-in grain types
+// translate a SKIRT grain type into one of the built-in grain types
+#ifdef BUILD_WITH_GAS
     GasModule::GrainTypeLabel stringToGrainTypeLabel(const string& populationGrainType)
     {
         if (StringUtils::contains(populationGrainType, "Silicate"))
@@ -43,6 +55,7 @@ namespace
         else
             return GasModule::GrainTypeLabel::OTHER;
     }
+#endif
 
     // dlambda = - (c / nu^2) dnu
     // dnu = - (c / lambda^2) dlambda
@@ -92,6 +105,7 @@ namespace
     // ----------------------------
 
     // properly initialized and modified by the first call to setThreadLocalGrainDensities
+#ifdef BUILD_WITH_GAS
     thread_local GasModule::GrainInterface t_gr;
     thread_local bool t_gr_is_ready{false};
     void setThreadLocalGrainDensities(const Array& mixNumberDensv)
@@ -128,8 +142,8 @@ namespace
                 t_gr.changePopulationDensityv(i, mixNumberDensToGrainDensityv(i, mixNumberDensv[i]));
         }
     }
-}
 #endif
+}
 
 ////////////////////////////////////////////////////////////////////
 
@@ -168,9 +182,13 @@ void Gas::initialize(const Array& lambdav, const std::vector<DustInfo>& dustinfo
     GasModule::GasInterface::errorHandlersOff();
     // Initialize the gas module
     _gi = new GasModule::GasInterface(iFrequencyv, iFrequencyv, eFrequencyv);
+
+    // retrieve some useful indices
+    _ip = _gi->index("H+");
+    _iH = _gi->index("H");
+    _iH2 = _gi->index("H2");
 #else
-    throw FATALERROR("SKIRT was built without gas support!")
-    (void)lambdav;
+    throw FATALERROR("SKIRT was built without gas support!")(void) lambdav;
     (void)dustinfov;
     (void)emissionWLG;
 #endif
@@ -202,7 +220,12 @@ void Gas::allocateGasStates(size_t num)
 
 bool Gas::hasGrainTypeSupport(const string& populationGrainType)
 {
+#ifdef BUILD_WITH_GAS
     return stringToGrainTypeLabel(populationGrainType) != GasModule::GrainTypeLabel::OTHER;
+#else
+    (void)populationGrainType;
+    return false;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -260,23 +283,19 @@ void Gas::updateGasState(int m, double n, const Array& meanIntensityv, const Arr
 
 void Gas::communicateResults()
 {
-#ifdef BUILD_WITH_GAS
     ProcessManager::sumToAll(_opacityvv.data());
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////
 
 void Gas::clearResults()
 {
-#ifdef BUILD_WITH_GAS
     _opacityvv.setToZero();
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////
 
-double Gas::gasTemperature(int m)
+double Gas::temperature(int m)
 {
 #ifdef BUILD_WITH_GAS
     return _statev[m].temperature();
@@ -288,40 +307,61 @@ double Gas::gasTemperature(int m)
 
 ////////////////////////////////////////////////////////////////////
 
+namespace
+{
+    double density(int m, int index)
+    {
+        // avoid some duplication of the ifdef stuff for the functions below
+#ifdef BUILD_WITH_GAS
+        return _statev[m].density(index);
+#else
+        (void)m;
+        (void)index;
+        return 0;
+#endif
+    }
+}
+
+////////////////////////////////////////////////////////////////////
+
+double Gas::np(int m)
+{
+    return density(m, _ip);
+}
+
+////////////////////////////////////////////////////////////////////
+
+double Gas::nH(int m)
+{
+    return density(m, _iH);
+}
+
+////////////////////////////////////////////////////////////////////
+
+double Gas::nH2(int m)
+{
+    return density(m, _iH2);
+}
+
+////////////////////////////////////////////////////////////////////
+
 double Gas::opacityAbs(double lambda, int m)
 {
-#ifdef BUILD_WITH_GAS
     return _opacityvv(m, indexForLambda(lambda));
-#else
-    (void)lambda;
-    (void)m;
-    return 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////
 
 double Gas::opacityAbs(int ell, int m)
 {
-#ifdef BUILD_WITH_GAS
     return _opacityvv(m, ell);
-#else
-    (void)ell;
-    (void)m;
-    return 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////
 
 int Gas::indexForLambda(double lambda)
 {
-#ifdef BUILD_WITH_GAS
     return NR::locateClip(_olambdav, lambda);
-#else
-    (void)lambda;
-    return 0;
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -337,5 +377,3 @@ Array Gas::emissivity(int m)
 }
 
 ////////////////////////////////////////////////////////////////////
-
-
