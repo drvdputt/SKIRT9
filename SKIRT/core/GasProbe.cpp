@@ -31,7 +31,7 @@ void GasProbe::probeRun()
 
     // cell coordinates
     file.addColumn("index", "", 'd');
-    for (auto s : {"x", "y", "z"}) file.addColumn(s, "m", 'e');
+    for (auto& s : {"x", "y", "z"}) file.addColumn(s, "m", 'e');
     int numCols = 4;
 
     // temperature
@@ -39,12 +39,17 @@ void GasProbe::probeRun()
     numCols++;
 
     // abundances
-    for (auto s : {"np", "nH", "nH2"}) file.addColumn(s, "cm-3", 'e');
+    for (auto& s : {"np", "nH", "nH2"}) file.addColumn(s, "cm-3", 'e');
     numCols += 3;
 
     if (extendedDiagnostics())
     {
-        // add more columns
+        // TODO: units
+        for (auto& s : Gas::diagnosticNames())
+        {
+            file.addColumn(s, "", 'e');
+            numCols++;
+        }
     }
 
     // do the diagnostics calculation in parallel (mostly relevent for the extended option)
@@ -53,13 +58,32 @@ void GasProbe::probeRun()
     find<ParallelFactory>()->parallelDistributed()->call(numCells, [&](size_t firstIndex, size_t numIndices) {
         for (size_t m = firstIndex; m < firstIndex + numIndices; m++)
         {
+            vector<double> numbersForCell;
+            numbersForCell.reserve(numCols);
+
+            // basic properties
             Position p = grid->centralPositionInCell(m);
-            vector<double> numbersForCell = {static_cast<double>(m), p.x(),      p.y(),      p.z(),
-                                             Gas::temperature(m),    Gas::np(m), Gas::nH(m), Gas::nH2(m)};
+            for (auto value : {static_cast<double>(m), p.x(), p.y(), p.z(), Gas::temperature(m), Gas::np(m), Gas::nH(m),
+                               Gas::nH2(m)})
+                numbersForCell.push_back(value);
 
             if (extendedDiagnostics())
             {
-                // add more numbers to vector
+                double n = 0;
+                for (int h = 0; h != ms->numMedia(); ++h)
+                    if (ms->isGas(h)) n += ms->numberDensity(m, h);
+
+                auto hv = Gas::hIndices();
+                Array nv(hv.size());
+                int c = 0;
+                for (int h : hv)
+                {
+                    nv[c] = ms->numberDensity(m, h);
+                    c++;
+                }
+
+                auto diagnostics = Gas::diagnostics(m, n, ms->meanIntensity(m), nv);
+                for (auto value : diagnostics) numbersForCell.push_back(value);
             }
 
             // temporary check for typo's

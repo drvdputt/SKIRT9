@@ -25,7 +25,7 @@ class GasProbe : public Probe
     ITEM_CONCRETE(GasProbe, Probe, "information about the gas at the end of the simulation")
         ATTRIBUTE_TYPE_DISPLAYED_IF(GasProbe, "GasMedium")
 
-        PROPERTY_BOOL(extendedDiagnostics, "enable advanced gas diagnostics (potentially slow)")
+        PROPERTY_BOOL(extendedDiagnostics, "enable advanced gas diagnostics (slow)")
         ATTRIBUTE_DEFAULT_VALUE(extendedDiagnostics, "false")
 
     ITEM_END()

@@ -671,7 +671,7 @@ void MediumSystem::updateGas()
                 int c = 0;
                 for (int h : hv)
                 {
-                    nv[c] = state(m, h).n;
+                    nv[c] = numberDensity(m, h);
                     c++;
                 }
 
