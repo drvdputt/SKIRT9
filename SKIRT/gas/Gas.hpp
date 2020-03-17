@@ -57,6 +57,15 @@ public:
         each thread works on different \c m. */
     static void updateGasState(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv);
 
+    /** This function re-reruns the calculation of the gas equilibrium for a cell, and returns many
+        diagnostic values as a vector. The exact contents of this vector are subject to frequent
+        change. Use \c diagnosticNames() to find out what these values mean. */
+    static vector<double> diagnostics(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv);
+
+    /** This functions returns a vector containing the names of the diagnostics returned by \c
+        diagnostics(). */
+    static vector<string> diagnosticNames();
+
     /** This function synchronizes the gas properties that need to be present at each process. It
         should be called by each process after they have finished working on updateGasState in
         parallel. TODO: communicate gas state contents. */

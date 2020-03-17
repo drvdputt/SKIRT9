@@ -9,6 +9,7 @@
 #include "Table.hpp"
 
 #ifdef BUILD_WITH_GAS
+#    include "GasDiagnostics.hpp"
 #    include "GasInterface.hpp"
 #    include <chrono>
 #    include <iostream>
@@ -230,53 +231,119 @@ bool Gas::hasGrainTypeSupport(const string& populationGrainType)
 
 ////////////////////////////////////////////////////////////////////
 
+#ifdef BUILD_WITH_GAS
+namespace
+{
+    // implementation of updateGasState, with optional GasDiagnostics pointer
+    void updateGasState_impl(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv,
+                             GasModule::GasDiagnostics* gd)
+    {
+
+        auto start = std::chrono::high_resolution_clock::now();
+        const Array& iFrequencyv = _gi->iFrequencyv();
+
+        if (iFrequencyv.size() != meanIntensityv.size())
+            throw FATALERROR("Something went wrong with the wavelength/frequency grids");
+
+        Array jnu = lambdaToNu(_lambdav, meanIntensityv);
+        // unit conversion:
+        // for gas module: erg s-1 cm-2 sr-1 Hz-1
+        // for skirt     : J   s-1 m-2  sr-1 Hz-1
+        //                 7   0   -4
+        jnu *= 1.e3;
+
+        size_t countzeros = 0;
+        for (size_t i = 0; i < iFrequencyv.size(); i++)
+            if (jnu[i] <= 0) countzeros++;
+
+        bool verbose = !(m % 300);
+        if (verbose && countzeros) std::cout << countzeros << " zeros in cell " << m << '\n';
+
+        // prepare grain info for this cell
+        setThreadLocalGrainDensities(mixNumberDensv);
+
+        // calculate the equilibrium
+        _gi->updateGasState(_statev[m], n * 1.e-6, jnu, t_gr, gd);
+
+        // calculate and store the opacity; the opacity table is indexed on wavelength, so we need to
+        // flip the result around
+        const Array& opacity_nu = _gi->opacity(_statev[m], true);
+        for (size_t ell = 0; ell < opacity_nu.size(); ell++)
+            _opacityvv(m, ell) = opacity_nu[opacity_nu.size() - 1 - ell];
+
+        if (verbose)
+        {
+            auto end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            std::cout << "gas sample " << m << " n " << n * 1.e-6 << " time " << duration.count() << " ms.\n";
+            std::cout << _gi->quickInfo(_statev[m], jnu) << '\n';
+        }
+    }
+}
+#endif
+
+////////////////////////////////////////////////////////////////////
+
 void Gas::updateGasState(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv)
 {
 #ifdef BUILD_WITH_GAS
-    auto start = std::chrono::high_resolution_clock::now();
-    const Array& iFrequencyv = _gi->iFrequencyv();
-
-    if (iFrequencyv.size() != meanIntensityv.size())
-        throw FATALERROR("Something went wrong with the wavelength/frequency grids");
-
-    Array jnu = lambdaToNu(_lambdav, meanIntensityv);
-    // unit conversion:
-    // for gas module: erg s-1 cm-2 sr-1 Hz-1
-    // for skirt     : J   s-1 m-2  sr-1 Hz-1
-    //                 7   0   -4
-    jnu *= 1.e3;
-
-    size_t countzeros = 0;
-    for (size_t i = 0; i < iFrequencyv.size(); i++)
-        if (jnu[i] <= 0) countzeros++;
-
-    bool verbose = !(m % 300);
-    if (verbose && countzeros) std::cout << countzeros << " zeros in cell " << m << '\n';
-
-    // prepare grain info for this cell
-    setThreadLocalGrainDensities(mixNumberDensv);
-
-    // calculate the equilibrium
-    _gi->updateGasState(_statev[m], n * 1.e-6, jnu, t_gr);
-
-    // calculate and store the opacity; the opacity table is indexed on wavelength, so we need to
-    // flip the result around
-    const Array& opacity_nu = _gi->opacity(_statev[m], true);
-    for (size_t ell = 0; ell < opacity_nu.size(); ell++) _opacityvv(m, ell) = opacity_nu[opacity_nu.size() - 1 - ell];
-
-    if (verbose)
-    {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        std::cout << "gas sample " << m << " n " << n * 1.e-6 << " time " << duration.count() << " ms.\n";
-        std::cout << _gi->quickInfo(_statev[m], jnu) << '\n';
-    }
+    updateGasState_impl(m, n, meanIntensityv, mixNumberDensv, nullptr);
 #else
-    (void)n;
     (void)m;
+    (void)n;
     (void)meanIntensityv;
     (void)mixNumberDensv;
 #endif
+}
+
+////////////////////////////////////////////////////////////////////
+
+vector<double> Gas::diagnostics(int m, double n, const Array& meanintensityv, const Array& mixNumberDensv)
+{
+    vector<double> result;
+#ifdef BUILD_WITH_GAS
+    // recalculate the gas state and extract diagnostics (expensive)
+    GasModule::GasDiagnostics gd;
+    updateGasState_impl(m, n, meanintensityv, mixNumberDensv, &gd);
+
+    // Gather the results; note that each map (e.g. gd.heating() and gd.cooling()) should contain
+    // the contributions in the same order each time. I don't know if this is guaranteed by the c++
+    // spec, but if it isn't, then I will need some other way to make sure that diagnosticNames()
+    // and diagnostics() match.
+
+    // heating, cooling, reaction rates
+    result.reserve(20);
+    for (auto& pair : gd.heating()) result.emplace_back(pair.second);
+    for (auto& pair : gd.cooling()) result.emplace_back(pair.second);
+    for (auto& d : gd.reactionRates()) result.emplace_back(d);
+#else
+    (void)m;
+    (void)n;
+    (void)meanIntensityv;
+    (void)mixNumberDensv;
+#endif
+    return result;
+}
+
+////////////////////////////////////////////////////////////////////
+
+vector<string> Gas::diagnosticNames()
+{
+    vector<string> result;
+#ifdef BUILD_WITH_GAS
+    // do a dummy calculation to get a gasdiagnostics object and figure out the names
+    GasModule::GasState gs;
+    GasModule::GasDiagnostics gd;
+    GasModule::GrainInterface gri;
+    _gi->updateGasState(gs, 0, Array(_gi->iFrequencyv().size()), gri, &gd);
+
+    // heating, cooling, reaction rates, hopefully in the same order as
+    result.reserve(20);
+    for (auto& pair : gd.heating()) result.emplace_back(pair.first);
+    for (auto& pair : gd.cooling()) result.emplace_back(pair.first);
+    for (auto& s : gd.reactionNames()) result.emplace_back(s);
+#endif
+    return result;
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -309,9 +376,9 @@ double Gas::temperature(int m)
 
 namespace
 {
+    // avoid some duplication of the ifdef stuff for the functions below
     double density(int m, int index)
     {
-        // avoid some duplication of the ifdef stuff for the functions below
 #ifdef BUILD_WITH_GAS
         return _statev[m].density(index);
 #else

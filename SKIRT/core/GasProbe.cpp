@@ -42,6 +42,11 @@ void GasProbe::probeRun()
     for (auto s : {"np", "nH", "nH2"}) file.addColumn(s, "cm-3", 'e');
     numCols += 3;
 
+    if (extendedDiagnostics())
+    {
+        // add more columns
+    }
+
     // do the diagnostics calculation in parallel (mostly relevent for the extended option)
     int numCells = grid->numCells();
     Table<2> numbers(numCells, numCols);
@@ -51,10 +56,15 @@ void GasProbe::probeRun()
             Position p = grid->centralPositionInCell(m);
             vector<double> numbersForCell = {static_cast<double>(m), p.x(),      p.y(),      p.z(),
                                              Gas::temperature(m),    Gas::np(m), Gas::nH(m), Gas::nH2(m)};
+
+            if (extendedDiagnostics())
+            {
+                // add more numbers to vector
+            }
+
             // temporary check for typo's
             int numNumbers = numbersForCell.size();
             if (numNumbers != numCols) FATALERROR("Incorrect number of elements for row");
-
             std::copy(std::begin(numbersForCell), std::end(numbersForCell), &numbers(m, 0));
         }
     });
