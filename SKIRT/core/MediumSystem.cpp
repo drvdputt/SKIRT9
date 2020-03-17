@@ -186,9 +186,8 @@ void MediumSystem::setupSelfAfter()
                     const string& name = mgdm->populationGrainType(c);
                     if (Gas::hasGrainTypeSupport(name))
                     {
-                        Gas::DustInfo dustinfo = {name, sizevv[c], numberDensityvv[c], qabsvvv[c]};
+                        Gas::DustInfo dustinfo = {h, name, sizevv[c], numberDensityvv[c], qabsvvv[c]};
                         dustinfov.push_back(dustinfo);
-                        _hCompatibleWithGasv.push_back(std::array<int, 2>{h, c});
                     }
                 }
             }
@@ -666,13 +665,15 @@ void MediumSystem::updateGas()
                 for (int h = 0; h != _numMedia; ++h)
                     if (isGas(h)) n += numberDensity(m, h);
 
-                // skip cells without gas
-                if (!n) continue;
-
-                // relevant dust density in correct format
-                int numCompatibleGrainPops = _hCompatibleWithGasv.size();
-                Array nv(numCompatibleGrainPops);
-                for (int i = 0; i < numCompatibleGrainPops; i++) nv[i] = state(m, _hCompatibleWithGasv[i][0]).n;
+                // relevant dust densities in correct format
+                auto hv = Gas::hIndices();
+                Array nv(hv.size());
+                int c = 0;
+                for (int h : hv)
+                {
+                    nv[c] = state(m, h).n;
+                    c++;
+                }
 
                 // call update
                 Gas::updateGasState(m, n, meanIntensity(m), nv);

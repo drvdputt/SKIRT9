@@ -32,6 +32,7 @@ namespace
     GasModule::GasInterface* _gi;  // instance of GasInterface
 #endif
     std::vector<Gas::DustInfo> _dustinfov;  // information about the dust populations in the simulation
+    vector<int> _hIndices;                  // indices which can be returned to help MediumSystem
     int _ip{-1}, _iH{-1}, _iH2{-1};         // indices to retrieve densities from gas states
 
 // set per cell during updateGasState
@@ -156,10 +157,12 @@ void Gas::initialize(const Array& lambdav, const std::vector<DustInfo>& dustinfo
     _lambdav = lambdav;
     _elambdav = emissionWLG;
     _dustinfov = dustinfov;
+    _hIndices.reserve(_dustinfov.size());
 
     // Change the units of the dust properties from SI to cgs
     for (Gas::DustInfo& d : _dustinfov)
     {
+        _hIndices.push_back(d.h);
         // Change size unit m to cm
         d.sizev *= 100.;
         // Flip the qabs arrays, because frequencies. This happens in-place.
@@ -227,6 +230,13 @@ bool Gas::hasGrainTypeSupport(const string& populationGrainType)
     (void)populationGrainType;
     return false;
 #endif
+}
+
+////////////////////////////////////////////////////////////////////
+
+const vector<int>& Gas::hIndices()
+{
+    return _hIndices;
 }
 
 ////////////////////////////////////////////////////////////////////

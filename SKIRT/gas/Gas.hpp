@@ -16,15 +16,18 @@ class Gas
 public:
     struct DustInfo
     {
+        // An index of choice for bookkeeping. Will be returned by \c dustIndices to indicate which
+        // densities are needed and in what order. In practice, this will be used by MediumSystem
+        // so that we can easily construct the \c mixNumberDensv argument of updateGasState.
+        int h;
         string grainType;
+
         // Representative sizes. Will be used naively in the gas code (processes are calculated
         // separately for each size given here, and then summed). Integrating everything over the
         // grain size distribution is not doable for most processes in the gas code.
         Array sizev;
-        // Number of grains 'per hydrogen atom' for each size
-        Array numberDensRatiov;
-        // Q_abs(a, nu), indexed on (size, frequency)
-        std::vector<Array> qabsvv;
+        Array numberDensRatiov;        // Number of grains 'per hydrogen atom' for each size 
+        std::vector<Array> qabsvv;         // Q_abs(a, nu), indexed on (size, frequency)
     };
 
     /** Initialize the gas module. Should be called exactly once, before any other functions of
@@ -46,6 +49,11 @@ public:
     /** This function returns \c true if the grain type described by the given string (get it from
         MultiGrainDustMic::populationGrainType(c)), is supported by the gas module. */
     static bool hasGrainTypeSupport(const string& populationGrainType);
+
+    /** This function returns the \c h indices that were contained in the dust info objects at
+        initialization, in the right order. They can be used to address the right density for the
+        mixNumberDensv argument of updateGasState(). */
+    static const vector<int>& hIndices();
 
     /** This function prepares the arguments for \c GasInterface::updateGasState() and calls it.
         The \c m argument indicates which of the allocated gas states should be updated. The number
