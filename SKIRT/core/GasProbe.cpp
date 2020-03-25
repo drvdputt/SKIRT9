@@ -4,6 +4,7 @@
 ///////////////////////////////////////////////////////////////// */
 
 #include "GasProbe.hpp"
+#include "Configuration.hpp"
 #include "FatalError.hpp"
 #include "Gas.hpp"
 #include "Log.hpp"
@@ -11,7 +12,9 @@
 #include "Parallel.hpp"
 #include "ParallelFactory.hpp"
 #include "ProcessManager.hpp"
+#include "StringUtils.hpp"
 #include "TextOutFile.hpp"
+#include "Units.hpp"
 
 ////////////////////////////////////////////////////////////////////
 
@@ -19,6 +22,7 @@ void GasProbe::probeRun()
 {
     auto ms = find<MediumSystem>(false);
     auto grid = ms->grid();
+    int numCells = grid->numCells();
     auto log = find<Log>(false);
 
     if (!ms->hasGas())
@@ -27,6 +31,34 @@ void GasProbe::probeRun()
         return;
     }
 
+    // this data is available on each process, so just write it out serially
+    if (gasOpacityPerCell())
+    {
+        auto wavelengthGrid = find<Configuration>()->radiationFieldWLG();
+        auto units = find<Units>();
+
+        // file with one column per wavelength
+        TextOutFile opacityFile(this, "gas_opacity", "gas opacity per cell on the radiation field WLG");
+        opacityFile.addColumn("index", "", 'd');
+        for (int ell = 0; ell != wavelengthGrid->numBins(); ++ell)
+            opacityFile.addColumn("opacity at lambda = "
+                                      + StringUtils::toString(units->owavelength(wavelengthGrid->wavelength(ell)), 'g')
+                                      + " " + units->uwavelength(),
+                                  "m-1");
+
+        // write a line for each cell
+        int numCells = grid->numCells();
+        for (int m = 0; m != numCells; ++m)
+        {
+            vector<double> values({static_cast<double>(m)});
+            values.reserve(wavelengthGrid->numBins());
+            for (int ell = 0; ell != wavelengthGrid->numBins(); ++ell) values.push_back(Gas::opacityAbs(ell, m));
+            opacityFile.writeRow(values);
+        }
+    }
+
+    // this data requires some calculations if the advanced diagnostics are active, so gather it in
+    // parallel, and then communicate to root
     TextOutFile file(this, "gas", "gas properties per cell");
 
     // cell coordinates
@@ -52,8 +84,6 @@ void GasProbe::probeRun()
         }
     }
 
-    // do the diagnostics calculation in parallel (mostly relevent for the extended option)
-    int numCells = grid->numCells();
     Table<2> numbers(numCells, numCols);
     find<ParallelFactory>()->parallelDistributed()->call(numCells, [&](size_t firstIndex, size_t numIndices) {
         for (size_t m = firstIndex; m < firstIndex + numIndices; m++)

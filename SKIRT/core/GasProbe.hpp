@@ -25,7 +25,10 @@ class GasProbe : public Probe
     ITEM_CONCRETE(GasProbe, Probe, "information about the gas at the end of the simulation")
         ATTRIBUTE_TYPE_DISPLAYED_IF(GasProbe, "GasMedium")
 
-        PROPERTY_BOOL(extendedDiagnostics, "enable advanced gas diagnostics (slow)")
+        PROPERTY_BOOL(gasOpacityPerCell, "output a text file containing the gas opacity")
+        ATTRIBUTE_DEFAULT_VALUE(gasOpacityPerCell, "true")
+
+        PROPERTY_BOOL(extendedDiagnostics, "add advanced gas diagnostics (slow)")
         ATTRIBUTE_DEFAULT_VALUE(extendedDiagnostics, "false")
 
     ITEM_END()
