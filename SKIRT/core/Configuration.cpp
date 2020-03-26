@@ -144,8 +144,7 @@ void Configuration::setupSelfBefore()
     }
 
     // retrieve dust self-absorption options
-    if (sim->simulationMode() == MonteCarloSimulation::SimulationMode::DustEmissionWithSelfAbsorption
-        || sim->simulationMode() == MonteCarloSimulation::SimulationMode::DustGasConsistent)
+    if (sim->simulationMode() == MonteCarloSimulation::SimulationMode::DustEmissionWithSelfAbsorption)
     {
         _hasDustSelfAbsorption = true;
         _hasSecondaryRadiationField = true;
@@ -156,13 +155,16 @@ void Configuration::setupSelfBefore()
         _numIterationPackets = sim->numPackets() * ms->dustSelfAbsorptionOptions()->iterationPacketsMultiplier();
     }
 
-    // retrieve gas emission and opacity iteration options
+    // retrieve gas emission and opacity iteration options (mutually exclusive from dust self-absorption)
     if (sim->simulationMode() == MonteCarloSimulation::SimulationMode::DustGasConsistent)
     {
+        _hasOpacityIteration = true;
+        _hasSecondaryRadiationField = true;
+
         _gasEmissionWLG = ms->gasEmissionOptions()->gasEmissionWLG();
         _gasEmissionWavelengthBias = ms->gasEmissionOptions()->wavelengthBias();
         _gasEmissionWavelengthBiasDistribution = ms->gasEmissionOptions()->wavelengthBiasDistribution();
-        _hasOpacityIteration = true;
+
         _opacityIterationWithSecondary = ms->selfConsistentOpacityOptions()->withSecondary();
         _opacityIterationMinIterations = ms->selfConsistentOpacityOptions()->minIterations();
         _opacityIterationMaxIterations = ms->selfConsistentOpacityOptions()->maxIterations();
