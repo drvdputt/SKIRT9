@@ -257,24 +257,24 @@ public:
     /** Returns the self-consistent opacity iteration convergence criterion described as follows:
         gas convergence is reached when the total gas-absorbed secondary luminosity is less than
         this fraction of the gas-absorbed primary luminosity. */
-    double opacityIterationMaxFractionOfPrimary_gas() const { return _opacityIterationMaxFractionOfPrimary_gas; }
+    double opacityIterationMaxFractionOfPrimaryGas() const { return _opacityIterationMaxFractionOfPrimaryGas; }
 
     /** Returns the self-consistent opacity iteration convergence criterion described as follows:
         gas convergence is reached when the total dust-absorbed secondary luminosity is less than
         this fraction of the dust-absorbed primary luminosity. */
-    double opacityIterationMaxFractionOfPrimary_dust() const { return _opacityIterationMaxFractionOfPrimary_dust; }
+    double opacityIterationMaxFractionOfPrimaryDust() const { return _opacityIterationMaxFractionOfPrimaryDust; }
 
     /** Returns the self-consistent opacity iteration convergence criterion described as follows:
         gas convergence is reached when the total gas-absorbed luminosity has changed by less than
         this fraction compared to the previous iteration for both the primary and the secondary
         emission. */
-    double opacityIterationMaxFractionOfPrevious_gas() const { return _opacityIterationMaxFractionOfPrevious_gas; }
+    double opacityIterationMaxFractionOfPreviousGas() const { return _opacityIterationMaxFractionOfPreviousGas; }
 
     /** Returns the self-consistent opacity iteration convergence criterion described as follows:
         dust convergence is reached when the total dust-absorbed luminosity has changed by less
         than this fraction compared to the previous iteration for both the primary and the
         secondary emission. */
-    double opacityIterationMaxFractionOfPrevious_dust() const { return _opacityIterationMaxFractionOfPrevious_dust; }
+    double opacityIterationMaxFractionOfPreviousDust() const { return _opacityIterationMaxFractionOfPreviousDust; }
     /** Returns the symmetry dimension of the input model, including sources and media, if present.
         A value of 1 means spherical symmetry, 2 means axial symmetry and 3 means none of these
         symmetries. */
@@ -374,10 +374,10 @@ private:
     bool _opacityIterationWithSecondary{false};
     int _opacityIterationMinIterations{2};
     int _opacityIterationMaxIterations{10};
-    double _opacityIterationMaxFractionOfPrimary_gas{0.01};
-    double _opacityIterationMaxFractionOfPrimary_dust{0.01};
-    double _opacityIterationMaxFractionOfPrevious_gas{0.03};
-    double _opacityIterationMaxFractionOfPrevious_dust{0.03};
+    double _opacityIterationMaxFractionOfPrimaryGas{0.01};
+    double _opacityIterationMaxFractionOfPrimaryDust{0.01};
+    double _opacityIterationMaxFractionOfPreviousGas{0.03};
+    double _opacityIterationMaxFractionOfPreviousDust{0.03};
     double _opacityIterationNumPrimaryPackets{0.};
     double _opacityIterationNumSecondaryPackets{0.};
 

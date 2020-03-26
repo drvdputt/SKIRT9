@@ -65,8 +65,7 @@ void MonteCarloSimulation::runSimulation()
     {
         TimeLogger logger(log(), "the run");
 
-        bool withSecondary = true;
-        if (_config->hasOpacityIteration()) runSelfConsistentOpacityPhase(withSecondary);
+        if (_config->hasOpacityIteration()) runSelfConsistentOpacityPhase();
 
         // primary emission segment
         runPrimaryEmission();
@@ -139,22 +138,32 @@ void MonteCarloSimulation::runPrimaryEmission()
 
 ////////////////////////////////////////////////////////////////////
 
-void MonteCarloSimulation::runSelfConsistentOpacityPhase(bool withSecondary)
+void MonteCarloSimulation::runSelfConsistentOpacityPhase()
 {
     TimeLogger logger(log(), "the self consistent opacity phase");
-    size_t Npp = _config->numPrimaryPackets();
-    if (!Npp)
+    size_t NppPrimary = _config->opacityIterationNumPrimaryPackets();
+    size_t NppSecondary = _config->opacityIterationNumSecondaryPackets();
+    bool withSecondary = _config->opacityIterationWithSecondary();
+
+    if (!NppPrimary)
     {
-        log()->warning("Skipping primary emission because no photon packets were requested");
+        log()->warning("Skipping self-consistent opacity phase because no primary photon packets were requested");
         return;
     }
     else if (!sourceSystem()->luminosity())
     {
-        log()->warning("Skipping primary emission because the total luminosity of primary sources is zero");
+        log()->warning(
+            "Skipping self-consistent opacity phase because the total luminosity of primary sources is zero");
         return;
     }
 
-    sourceSystem()->prepareForLaunch(Npp);
+    if (withSecondary && !NppSecondary)
+    {
+        log()->warning("Ignoring secondary emission because no secondary photon packets were requested");
+        withSecondary = false;
+    }
+
+    sourceSystem()->prepareForLaunch(NppPrimary);
     auto parallel = find<ParallelFactory>()->parallelDistributed();
 
     double prevLabsPrimgas = 0;
@@ -162,17 +171,18 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase(bool withSecondary)
     double prevLabsSecgas = 0.;
     double prevLabsSecdust = 0.;
 
-    double fractionOfPreviousgas = 0.03;
-    double fractionOfPreviousdust = _config->maxFractionOfPrevious();
-    double fractionOfPrimarygas = 0.;
-    double fractionOfPrimarydust = _config->maxFractionOfPrimary();
-    int minIters = 3;
-    int maxIters = 10;
+    double fractionOfPreviousgas = _config->opacityIterationMaxFractionOfPreviousGas();
+    double fractionOfPreviousdust = _config->opacityIterationMaxFractionOfPreviousDust();
+    double fractionOfPrimarygas = _config->opacityIterationMaxFractionOfPrimaryGas();
+    double fractionOfPrimarydust = _config->opacityIterationMaxFractionOfPrimaryDust();
+    int minIters = _config->opacityIterationMinIterations();
+    int maxIters = _config->opacityIterationMaxIterations();
 
+    // once certain criteria are met, secondary emission will be turned on (if requested)
     bool doSecondary = false;
     for (int iter = 1; iter <= maxIters; iter++)
     {
-        string segment = "self consistent opacity iteration (primary)" + std::to_string(iter);
+        string segment = "self consistent opacity iteration " + std::to_string(iter) + " (primary)";
         {
             TimeLogger logger(log(), segment);
 
@@ -180,27 +190,29 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase(bool withSecondary)
             mediumSystem()->clearRadiationFieldsForNewOpacity();
 
             // re-run primary emission with new opacity
-            initProgress(segment, Npp);
-            parallel->call(Npp, [this](size_t i, size_t n) { performLifeCycle(i, n, true, false, true); });
+            initProgress(segment, NppPrimary);
+            parallel->call(NppPrimary, [this](size_t i, size_t n) { performLifeCycle(i, n, true, false, true); });
             instrumentSystem()->flush();
             wait(segment);
             // communicate primary radiation field
             mediumSystem()->communicateRadiationField(true);
         }
 
-        segment = "self consistent opacity iteration (secondary)" + std::to_string(iter);
+        segment = "self consistent opacity iteration " + std::to_string(iter) + " (secondary)";
         if (doSecondary)
         {
             TimeLogger logger(log(), segment);
 
             // re-run secondary emission with new opacity
-            if (_secondarySourceSystem->prepareForLaunch(Npp))
+            if (_secondarySourceSystem->prepareForLaunch(NppSecondary))
             {
-                initProgress(segment, Npp);
-                parallel->call(Npp, [this](size_t i, size_t n) { performLifeCycle(i, n, false, false, true); });
+                initProgress(segment, NppSecondary);
+                parallel->call(NppSecondary,
+                               [this](size_t i, size_t n) { performLifeCycle(i, n, false, false, true); });
                 instrumentSystem()->flush();
                 wait(segment);
-                // communicate secondary radiation field (and overwrite cached copy that was used for secondary emission)
+                // communicate secondary radiation field (and overwrite cached copy that was used
+                // during secondary emission)
                 mediumSystem()->communicateRadiationField(false);
             }
             else

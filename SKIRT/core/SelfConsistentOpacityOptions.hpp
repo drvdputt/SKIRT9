@@ -38,39 +38,39 @@ class SelfConsistentOpacityOptions : public SimulationItem
         ATTRIBUTE_DEFAULT_VALUE(maxIterations, "10")
         ATTRIBUTE_DISPLAYED_IF(maxIterations, "Level3")
 
-        PROPERTY_DOUBLE(maxFractionOfPrimary_gas,
-                        "gas convergence is reached when the total gas-absorbed secondary luminosity  "
+        PROPERTY_DOUBLE(FractionOfPrimaryGas,
+                        "gas convergence is reached when the total gas-absorbed secondary luminosity "
                         "is less than this fraction of the gas-absorbed primary luminosity")
-        ATTRIBUTE_MIN_VALUE(maxFractionOfPrimary_gas, "]0")
-        ATTRIBUTE_MAX_VALUE(maxFractionOfPrimary_gas, "1[")
-        ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPrimary_gas, "0.01")
-        ATTRIBUTE_DISPLAYED_IF(maxFractionOfPrimary_gas, "Level2")
+        ATTRIBUTE_MIN_VALUE(FractionOfPrimaryGas, "]0")
+        ATTRIBUTE_MAX_VALUE(FractionOfPrimaryGas, "1[")
+        ATTRIBUTE_DEFAULT_VALUE(FractionOfPrimaryGas, "0.01")
+        ATTRIBUTE_DISPLAYED_IF(FractionOfPrimaryGas, "Level2")
 
-        PROPERTY_DOUBLE(maxFractionOfPrimary_dust,
-                        "dust convergence is reached when the total dust-absorbed secondary luminosity  "
+        PROPERTY_DOUBLE(FractionOfPrimaryDust,
+                        "dust convergence is reached when the total dust-absorbed secondary luminosity "
                         "is less than this fraction of the dust-absorbed primary luminosity")
-        ATTRIBUTE_MIN_VALUE(maxFractionOfPrimary_dust, "]0")
-        ATTRIBUTE_MAX_VALUE(maxFractionOfPrimary_dust, "1[")
-        ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPrimary_dust, "0.01")
-        ATTRIBUTE_DISPLAYED_IF(maxFractionOfPrimary_dust, "Level2")
+        ATTRIBUTE_MIN_VALUE(FractionOfPrimaryDust, "]0")
+        ATTRIBUTE_MAX_VALUE(FractionOfPrimaryDust, "1[")
+        ATTRIBUTE_DEFAULT_VALUE(FractionOfPrimaryDust, "0.01")
+        ATTRIBUTE_DISPLAYED_IF(FractionOfPrimaryDust, "Level2")
 
         PROPERTY_DOUBLE(
-            maxFractionOfPrevious_gas,
+            maxFractionOfPreviousGas,
             "gas convergence is reached when the total gas-absorbed luminosity has changed by less than this "
             "fraction compared to the previous iteration for both the primary and the secondary emission")
-        ATTRIBUTE_MIN_VALUE(maxFractionOfPrevious_gas, "]0")
-        ATTRIBUTE_MAX_VALUE(maxFractionOfPrevious_gas, "1[")
-        ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPrevious_gas, "0.03")
-        ATTRIBUTE_DISPLAYED_IF(maxFractionOfPrevious_gas, "Level2")
+        ATTRIBUTE_MIN_VALUE(maxFractionOfPreviousGas, "]0")
+        ATTRIBUTE_MAX_VALUE(maxFractionOfPreviousGas, "1[")
+        ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPreviousGas, "0.03")
+        ATTRIBUTE_DISPLAYED_IF(maxFractionOfPreviousGas, "Level2")
 
         PROPERTY_DOUBLE(
-            maxFractionOfPrevious_dust,
+            maxFractionOfPreviousDust,
             "dust convergence is reached when the total dust-absorbed luminosity has changed by less than this "
             "fraction compared to the previous iteration for both the primary and the secondary emission")
-        ATTRIBUTE_MIN_VALUE(maxFractionOfPrevious_dust, "]0")
-        ATTRIBUTE_MAX_VALUE(maxFractionOfPrevious_dust, "1[")
-        ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPrevious_dust, "0.03")
-        ATTRIBUTE_DISPLAYED_IF(maxFractionOfPrevious_dust, "Level2")
+        ATTRIBUTE_MIN_VALUE(maxFractionOfPreviousDust, "]0")
+        ATTRIBUTE_MAX_VALUE(maxFractionOfPreviousDust, "1[")
+        ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPreviousDust, "0.03")
+        ATTRIBUTE_DISPLAYED_IF(maxFractionOfPreviousDust, "Level2")
 
         PROPERTY_DOUBLE(primaryPacketsMultiplier,
                         "the multiplier on the number of primary photon packets lauched for each opacity iteration")

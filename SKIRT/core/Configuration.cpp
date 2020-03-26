@@ -166,10 +166,10 @@ void Configuration::setupSelfBefore()
         _opacityIterationWithSecondary = ms->selfConsistentOpacityOptions()->withSecondary();
         _opacityIterationMinIterations = ms->selfConsistentOpacityOptions()->minIterations();
         _opacityIterationMaxIterations = ms->selfConsistentOpacityOptions()->maxIterations();
-        _opacityIterationMaxFractionOfPrimary_gas = ms->selfConsistentOpacityOptions()->maxFractionOfPrimary_gas();
-        _opacityIterationMaxFractionOfPrimary_dust = ms->selfConsistentOpacityOptions()->maxFractionOfPrimary_dust();
-        _opacityIterationMaxFractionOfPrevious_gas = ms->selfConsistentOpacityOptions()->maxFractionOfPrevious_gas();
-        _opacityIterationMaxFractionOfPrevious_dust = ms->selfConsistentOpacityOptions()->maxFractionOfPrevious_dust();
+        _opacityIterationMaxFractionOfPrimaryGas = ms->selfConsistentOpacityOptions()->FractionOfPrimaryGas();
+        _opacityIterationMaxFractionOfPrimaryDust = ms->selfConsistentOpacityOptions()->FractionOfPrimaryDust();
+        _opacityIterationMaxFractionOfPreviousGas = ms->selfConsistentOpacityOptions()->maxFractionOfPreviousGas();
+        _opacityIterationMaxFractionOfPreviousDust = ms->selfConsistentOpacityOptions()->maxFractionOfPreviousDust();
         _opacityIterationNumPrimaryPackets =
             sim->numPackets() * ms->selfConsistentOpacityOptions()->primaryPacketsMultiplier();
         _opacityIterationNumSecondaryPackets =
