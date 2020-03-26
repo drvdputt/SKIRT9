@@ -94,16 +94,16 @@ class MonteCarloSimulation : public Simulation
 
         PROPERTY_ENUM(simulationMode, SimulationMode, "the overall simulation mode")
         ATTRIBUTE_DEFAULT_VALUE(simulationMode, "ExtinctionOnly")
-        ATTRIBUTE_INSERT(simulationMode,
-                         "simulationModeOligoNoMedium:Oligochromatic,NoMedium;"
-                         "simulationModeOligoExtinctionOnly:Oligochromatic,ExtinctionOnly;"
-                         "simulationModeNoMedium:Panchromatic,NoMedium;"
-                         "simulationModeExtinctionOnly:Panchromatic,ExtinctionOnly;"
-                         "simulationModeDustEmission:Panchromatic,DustEmission,Emission,RadiationField;"
-                         "simulationModeDustEmissionWithSelfAbsorption:"
-                         "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption;"
-                         "simulationModeDustGasConsistent:"
-                         "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption,GasMedium,GasEmission")
+        ATTRIBUTE_INSERT(simulationMode, "simulationModeOligoNoMedium:Oligochromatic,NoMedium;"
+                                         "simulationModeOligoExtinctionOnly:Oligochromatic,ExtinctionOnly;"
+                                         "simulationModeNoMedium:Panchromatic,NoMedium;"
+                                         "simulationModeExtinctionOnly:Panchromatic,ExtinctionOnly;"
+                                         "simulationModeDustEmission:Panchromatic,DustEmission,Emission,RadiationField;"
+                                         "simulationModeDustEmissionWithSelfAbsorption:"
+                                         "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption;"
+                                         "simulationModeDustGasConsistent:"
+                                         "Panchromatic,DustEmission,Emission,RadiationField,DustSelfAbsorption,"
+                                         "OpacityIteration,GasMedium,GasEmission")
 
         PROPERTY_ITEM(cosmology, Cosmology, "the cosmology parameters")
         ATTRIBUTE_DEFAULT_VALUE(cosmology, "LocalUniverseCosmology")

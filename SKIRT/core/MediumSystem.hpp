@@ -14,6 +14,7 @@
 #include "MaterialMix.hpp"
 #include "Medium.hpp"
 #include "PhotonPacketOptions.hpp"
+#include "SelfConsistentOpacityOptions.hpp"
 #include "SimulationItem.hpp"
 #include "SpatialGrid.hpp"
 #include "Table.hpp"
@@ -76,6 +77,11 @@ class MediumSystem : public SimulationItem
         PROPERTY_ITEM(gasEmissionOptions, GasEmissionOptions, "the gas emission options")
         ATTRIBUTE_DEFAULT_VALUE(gasEmissionOptions, "GasEmissionOptions")
         ATTRIBUTE_RELEVANT_IF(gasEmissionOptions, "GasEmission")
+
+        PROPERTY_ITEM(selfConsistentOpacityOptions, SelfConsistentOpacityOptions,
+                      "the self-consistent opacity iteration options")
+        ATTRIBUTE_DEFAULT_VALUE(selfConsistentOpacityOptions, "SelfConsistentOpacityOptions")
+        ATTRIBUTE_RELEVANT_IF(selfConsistentOpacityOptions, "OpacityIteration")
 
         PROPERTY_INT(numDensitySamples, "the number of random density samples for determining spatial cell mass")
         ATTRIBUTE_MIN_VALUE(numDensitySamples, "10")

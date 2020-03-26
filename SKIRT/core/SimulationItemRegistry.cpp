@@ -4,7 +4,6 @@
 ///////////////////////////////////////////////////////////////// */
 
 #include "SimulationItemRegistry.hpp"
-#include "GasProbe.hpp"
 #include "ItemRegistry.hpp"
 #include "SkirtUnitDef.hpp"
 
@@ -82,6 +81,7 @@
 #include "GammaGeometry.hpp"
 #include "GasEmissionOptions.hpp"
 #include "GasMix.hpp"
+#include "GasProbe.hpp"
 #include "GaussianGeometry.hpp"
 #include "GeometricMedium.hpp"
 #include "GeometricSource.hpp"
@@ -184,6 +184,7 @@
 #include "SIUnits.hpp"
 #include "ScaledGaussianSmoothingKernel.hpp"
 #include "SelectDustMixFamily.hpp"
+#include "SelfConsistentOpacityOptions.hpp"
 #include "SersicGeometry.hpp"
 #include "ShellGeometry.hpp"
 #include "SineSquarePolarizationProfile.hpp"
@@ -453,6 +454,7 @@ SimulationItemRegistry::SimulationItemRegistry(string version, string format)
     ItemRegistry::add<DustEmissionOptions>();
     ItemRegistry::add<DustSelfAbsorptionOptions>();
     ItemRegistry::add<GasEmissionOptions>();
+    ItemRegistry::add<SelfConsistentOpacityOptions>();
 
     // material normalizations
     ItemRegistry::add<MaterialNormalization>();
