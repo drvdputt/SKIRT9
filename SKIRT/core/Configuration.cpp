@@ -156,13 +156,24 @@ void Configuration::setupSelfBefore()
         _numIterationPackets = sim->numPackets() * ms->dustSelfAbsorptionOptions()->iterationPacketsMultiplier();
     }
 
-    // retrieve gas and opacity iteration options
+    // retrieve gas emission and opacity iteration options
     if (sim->simulationMode() == MonteCarloSimulation::SimulationMode::DustGasConsistent)
     {
         _gasEmissionWLG = ms->gasEmissionOptions()->gasEmissionWLG();
         _gasEmissionWavelengthBias = ms->gasEmissionOptions()->wavelengthBias();
         _gasEmissionWavelengthBiasDistribution = ms->gasEmissionOptions()->wavelengthBiasDistribution();
         _hasOpacityIteration = true;
+        _opacityIterationWithSecondary = ms->selfConsistentOpacityOptions()->withSecondary();
+        _opacityIterationMinIterations = ms->selfConsistentOpacityOptions()->minIterations();
+        _opacityIterationMaxIterations = ms->selfConsistentOpacityOptions()->maxIterations();
+        _opacityIterationMaxFractionOfPrimary_gas = ms->selfConsistentOpacityOptions()->maxFractionOfPrimary_gas();
+        _opacityIterationMaxFractionOfPrimary_dust = ms->selfConsistentOpacityOptions()->maxFractionOfPrimary_dust();
+        _opacityIterationMaxFractionOfPrevious_gas = ms->selfConsistentOpacityOptions()->maxFractionOfPrevious_gas();
+        _opacityIterationMaxFractionOfPrevious_dust = ms->selfConsistentOpacityOptions()->maxFractionOfPrevious_dust();
+        _opacityIterationNumPrimaryPackets =
+            sim->numPackets() * ms->selfConsistentOpacityOptions()->primaryPacketsMultiplier();
+        _opacityIterationNumSecondaryPackets =
+            sim->numPackets() * ms->selfConsistentOpacityOptions()->secondaryPacketsMultiplier();
     }
 
     // retrieve symmetry dimensions
