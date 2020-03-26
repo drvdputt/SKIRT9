@@ -110,7 +110,7 @@ namespace
 #ifdef BUILD_WITH_GAS
     thread_local GasModule::GrainInterface t_gr;
     thread_local bool t_gr_is_ready{false};
-    void setThreadLocalGrainDensities(const Array& mixNumberDensv)
+    void setThreadLocalGrainDensities(const Array& mixNumberDensv, bool verbose)
     {
         // initialize when a thread meets this function for the first time (i.e. no populations are
         // present yet)
@@ -124,14 +124,6 @@ namespace
                 // Set the grain number densities using the number density of the mix (fictional H
                 // density), and change unit from m-3 to cm-3
                 Array densityv = mixNumberDensToGrainDensityv(i, mixNumberDensv[i]);
-                if (false)
-                {
-                    std::cout << "grain size:";
-                    for (double d : _dustinfov[i].sizev) std::cout << ' ' << d;
-                    std::cout << "\ngrain dens:";
-                    for (double d : densityv) std::cout << ' ' << d;
-                    std::cout << '\n';
-                }
                 t_gr.addPopulation(stringToGrainTypeLabel(_dustinfov[i].grainType), _dustinfov[i].sizev, densityv,
                                    temperaturev, _gi->iFrequencyv(), _dustinfov[i].qabsvv);
                 t_gr_is_ready = true;
@@ -141,7 +133,18 @@ namespace
         {
             // simply change the number densities of the populations added in the block above
             for (size_t i = 0; i < _dustinfov.size(); i++)
-                t_gr.changePopulationDensityv(i, mixNumberDensToGrainDensityv(i, mixNumberDensv[i]));
+            {
+                const Array& densityv = mixNumberDensToGrainDensityv(i, mixNumberDensv[i]);
+                if (verbose)
+                {
+                    std::cout << "pop " << i << " grain sizes:";
+                    for (double d : _dustinfov[i].sizev) std::cout << ' ' << d;
+                    std::cout << "\npop " << i << " grain densities:";
+                    for (double d : densityv) std::cout << ' ' << d;
+                    std::cout << '\n';
+                }
+                t_gr.changePopulationDensityv(i, densityv);
+            }
         }
     }
 #endif
@@ -270,7 +273,7 @@ namespace
         if (verbose && countzeros) std::cout << countzeros << " zeros in cell " << m << '\n';
 
         // prepare grain info for this cell
-        setThreadLocalGrainDensities(mixNumberDensv);
+        setThreadLocalGrainDensities(mixNumberDensv, verbose);
 
         // calculate the equilibrium
         _gi->updateGasState(_statev[m], n * 1.e-6, jnu, t_gr, gd);
