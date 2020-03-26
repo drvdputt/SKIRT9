@@ -244,6 +244,16 @@ public:
         this fraction compared to the previous iteration. */
     double maxFractionOfPrevious() const { return _maxFractionOfPrevious; }
 
+    /** Returns the minimum number of opacity iterations. */
+    int opacityIterationMinIterations() const { return _opacityIterationMinIterations; }
+
+    /** Return the maximum number of opacity iterations. */
+    int opacityIterationMaxIterations() const { return _opacityIterationMaxIterations; }
+
+    /** Returns true if secondary emission should be treated during the self-consistent opacity
+        iterations. */
+    bool opacityIterationWithSecondary() const { return _opacityIterationWithSecondary; }
+
     /** Returns the self-consistent opacity iteration convergence criterion described as follows:
         gas convergence is reached when the total gas-absorbed secondary luminosity is less than
         this fraction of the gas-absorbed primary luminosity. */
