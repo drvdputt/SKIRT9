@@ -40,7 +40,7 @@ class SelfConsistentOpacityOptions : public SimulationItem
 
         PROPERTY_DOUBLE(maxFractionOfPrimary_gas,
                         "gas convergence is reached when the total gas-absorbed secondary luminosity  "
-                        "is less than this fraction of the gas absorbed primary luminosity")
+                        "is less than this fraction of the gas-absorbed primary luminosity")
         ATTRIBUTE_MIN_VALUE(maxFractionOfPrimary_gas, "]0")
         ATTRIBUTE_MAX_VALUE(maxFractionOfPrimary_gas, "1[")
         ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPrimary_gas, "0.01")
@@ -48,7 +48,7 @@ class SelfConsistentOpacityOptions : public SimulationItem
 
         PROPERTY_DOUBLE(maxFractionOfPrimary_dust,
                         "dust convergence is reached when the total dust-absorbed secondary luminosity  "
-                        "is less than this fraction of the dust absorbed primary luminosity")
+                        "is less than this fraction of the dust-absorbed primary luminosity")
         ATTRIBUTE_MIN_VALUE(maxFractionOfPrimary_dust, "]0")
         ATTRIBUTE_MAX_VALUE(maxFractionOfPrimary_dust, "1[")
         ATTRIBUTE_DEFAULT_VALUE(maxFractionOfPrimary_dust, "0.01")
