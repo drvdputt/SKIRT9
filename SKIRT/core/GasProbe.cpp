@@ -5,13 +5,17 @@
 
 #include "GasProbe.hpp"
 #include "Configuration.hpp"
+#include "Direction.hpp"
 #include "FatalError.hpp"
 #include "Gas.hpp"
 #include "Log.hpp"
+#include "MaterialMix.hpp"
 #include "MediumSystem.hpp"
 #include "Parallel.hpp"
 #include "ParallelFactory.hpp"
+#include "Position.hpp"
 #include "ProcessManager.hpp"
+#include "SpatialGridPath.hpp"
 #include "StringUtils.hpp"
 #include "TextOutFile.hpp"
 #include "Units.hpp"
@@ -20,10 +24,13 @@
 
 void GasProbe::probeRun()
 {
+    auto log = find<Log>(false);
+    auto units = find<Units>();
+    auto wavelengthGrid = find<Configuration>()->radiationFieldWLG();
+    int numWavelengths = wavelengthGrid->numBins();
     auto ms = find<MediumSystem>(false);
     auto grid = ms->grid();
     int numCells = grid->numCells();
-    auto log = find<Log>(false);
 
     if (!ms->hasGas())
     {
@@ -34,8 +41,6 @@ void GasProbe::probeRun()
     // this data is available on each process, so just write it out serially
     if (gasOpacityPerCell())
     {
-        auto wavelengthGrid = find<Configuration>()->radiationFieldWLG();
-        auto units = find<Units>();
 
         // file with one column per wavelength
         TextOutFile opacityFile(this, "gas_opacity", "gas opacity per cell on the radiation field WLG");
@@ -47,13 +52,35 @@ void GasProbe::probeRun()
                                   "m-1");
 
         // write a line for each cell
-        int numCells = grid->numCells();
         for (int m = 0; m != numCells; ++m)
         {
             vector<double> values({static_cast<double>(m)});
-            values.reserve(wavelengthGrid->numBins());
-            for (int ell = 0; ell != wavelengthGrid->numBins(); ++ell) values.push_back(Gas::opacityAbs(ell, m));
+            values.reserve(numWavelengths);
+            for (int ell = 0; ell != numWavelengths; ++ell) values.push_back(Gas::opacityAbs(ell, m));
             opacityFile.writeRow(values);
+        }
+    }
+
+    if (gasOpticalDepthX())
+    {
+        TextOutFile depthFile(this, "gas_opticaldepth_x",
+                              "gas optical depth integrated along the x-axis on the radiation field WLG");
+        depthFile.addColumn("wavelength", units->uwavelength());
+        depthFile.addColumn("gas optical depth");
+        depthFile.addColumn("dust optical depth");
+        depthFile.addColumn("total optical depth");
+
+        // grid path representing the x-axis
+        double size = grid->boundingBox().diagonal();
+        SpatialGridPath path(Position(-size, 0., 0.), Direction(1., 0., 0.));
+
+        // write a line for each wavelength of the radiation field wavelength grid
+        for (int ell = 0; ell < numWavelengths; ++ell)
+        {
+            double lambda = wavelengthGrid->wavelength(ell);
+            double tauGas = ms->opticalDepth(&path, lambda, MaterialMix::MaterialType::Gas);
+            double tauDust = ms->opticalDepth(&path, lambda, MaterialMix::MaterialType::Dust);
+            depthFile.writeRow({units->owavelength(lambda), tauGas, tauDust, tauGas + tauDust});
         }
     }
 
@@ -125,7 +152,11 @@ void GasProbe::probeRun()
 
     // write (root only)
     ProcessManager::sumToRoot(numbers.data());
-    for (int m = 0; m < numCells; m++) file.writeRow(vector<double>(&numbers(m, 0), &numbers(m, numCols)));
+    for (int m = 0; m < numCells; m++)
+    {
+        double* data = &numbers(m, 0);
+        file.writeRow(vector<double>(data, data + numCols));
+    }
 }
 
 ////////////////////////////////////////////////////////////////////

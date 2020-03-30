@@ -25,8 +25,15 @@ class GasProbe : public Probe
     ITEM_CONCRETE(GasProbe, Probe, "information about the gas at the end of the simulation")
         ATTRIBUTE_TYPE_DISPLAYED_IF(GasProbe, "GasMedium")
 
-        PROPERTY_BOOL(gasOpacityPerCell, "output a text file containing the gas opacity")
+        // TODO: turn opacity/optical depth extensions into dedicated probe for dust+gas
+
+        PROPERTY_BOOL(gasOpacityPerCell,
+                      "output a text file containing the gas opacity for every cell and RF wavelength")
         ATTRIBUTE_DEFAULT_VALUE(gasOpacityPerCell, "true")
+
+        PROPERTY_BOOL(gasOpticalDepthX,
+                      "output a text file containing the total gas optical depth along the x-axis, per wavelength")
+        ATTRIBUTE_DEFAULT_VALUE(gasOpticalDepthX, "true")
 
         PROPERTY_BOOL(extendedDiagnostics, "add advanced gas diagnostics (slow)")
         ATTRIBUTE_DEFAULT_VALUE(extendedDiagnostics, "false")
