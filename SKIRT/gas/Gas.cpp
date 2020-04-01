@@ -108,7 +108,7 @@ namespace
 
     // properly initialized and modified by the first call to setThreadLocalGrainDensities
 #ifdef BUILD_WITH_GAS
-    thread_local GasModule::GrainInterface t_gr;
+    thread_local GasModule::GrainInterface t_grainInterface;
     thread_local bool t_gr_is_ready{false};
     void setThreadLocalGrainDensities(const Array& mixNumberDensv, bool verbose)
     {
@@ -124,8 +124,8 @@ namespace
                 // Set the grain number densities using the number density of the mix (fictional H
                 // density), and change unit from m-3 to cm-3
                 Array densityv = mixNumberDensToGrainDensityv(i, mixNumberDensv[i]);
-                t_gr.addPopulation(stringToGrainTypeLabel(_dustinfov[i].grainType), _dustinfov[i].sizev, densityv,
-                                   temperaturev, _gi->iFrequencyv(), _dustinfov[i].qabsvv);
+                t_grainInterface.addPopulation(stringToGrainTypeLabel(_dustinfov[i].grainType), _dustinfov[i].sizev,
+                                               densityv, temperaturev, _gi->iFrequencyv(), _dustinfov[i].qabsvv);
                 t_gr_is_ready = true;
             }
         }
@@ -143,7 +143,7 @@ namespace
                     for (double d : densityv) std::cout << ' ' << d;
                     std::cout << '\n';
                 }
-                t_gr.changePopulationDensityv(i, densityv);
+                t_grainInterface.changePopulationDensityv(i, densityv);
             }
         }
     }
@@ -249,7 +249,7 @@ namespace
 {
     // implementation of updateGasState, with optional GasDiagnostics pointer
     void updateGasState_impl(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv,
-                             GasModule::GasDiagnostics* gd)
+                             GasModule::GasDiagnostics* gasDiagnostics)
     {
 
         auto start = std::chrono::high_resolution_clock::now();
@@ -276,7 +276,7 @@ namespace
         setThreadLocalGrainDensities(mixNumberDensv, verbose);
 
         // calculate the equilibrium
-        _gi->updateGasState(_statev[m], n * 1.e-6, jnu, t_gr, gd);
+        _gi->updateGasState(_statev[m], n * 1.e-6, jnu, t_grainInterface, gasDiagnostics);
 
         // calculate and store the opacity; the opacity table is indexed on wavelength, so we need to
         // flip the result around
@@ -316,8 +316,8 @@ vector<double> Gas::diagnostics(int m, double n, const Array& meanintensityv, co
     vector<double> result;
 #ifdef BUILD_WITH_GAS
     // recalculate the gas state and extract diagnostics (expensive)
-    GasModule::GasDiagnostics gd;
-    updateGasState_impl(m, n, meanintensityv, mixNumberDensv, &gd);
+    GasModule::GasDiagnostics gasDiagnostics;
+    updateGasState_impl(m, n, meanintensityv, mixNumberDensv, &gasDiagnostics);
 
     // Gather the results; note that each map (e.g. gd.heating() and gd.cooling()) should contain
     // the contributions in the same order each time. I don't know if this is guaranteed by the c++
@@ -326,9 +326,9 @@ vector<double> Gas::diagnostics(int m, double n, const Array& meanintensityv, co
 
     // heating, cooling, reaction rates
     result.reserve(20);
-    for (auto& pair : gd.heating()) result.emplace_back(pair.second);
-    for (auto& pair : gd.cooling()) result.emplace_back(pair.second);
-    for (auto& d : gd.reactionRates()) result.emplace_back(d);
+    for (auto& pair : gasDiagnostics.heating()) result.emplace_back(pair.second);
+    for (auto& pair : gasDiagnostics.cooling()) result.emplace_back(pair.second);
+    for (auto& d : gasDiagnostics.reactionRates()) result.emplace_back(d);
 #else
     (void)m;
     (void)n;
@@ -345,16 +345,16 @@ vector<string> Gas::diagnosticNames()
     vector<string> result;
 #ifdef BUILD_WITH_GAS
     // do a dummy calculation to get a gasdiagnostics object and figure out the names
-    GasModule::GasState gs;
-    GasModule::GasDiagnostics gd;
-    GasModule::GrainInterface gri;
-    _gi->updateGasState(gs, 0, Array(_gi->iFrequencyv().size()), gri, &gd);
+    GasModule::GasState gasState;
+    GasModule::GasDiagnostics gasDiagnostics;
+    GasModule::GrainInterface grainInterface;
+    _gi->updateGasState(gasState, 0, Array(_gi->iFrequencyv().size()), grainInterface, &gasDiagnostics);
 
     // heating, cooling, reaction rates, hopefully in the same order as
     result.reserve(20);
-    for (auto& pair : gd.heating()) result.emplace_back(pair.first);
-    for (auto& pair : gd.cooling()) result.emplace_back(pair.first);
-    for (auto& s : gd.reactionNames()) result.emplace_back(s);
+    for (auto& pair : gasDiagnostics.heating()) result.emplace_back(pair.first);
+    for (auto& pair : gasDiagnostics.cooling()) result.emplace_back(pair.first);
+    for (auto& s : gasDiagnostics.reactionNames()) result.emplace_back(s);
 #endif
     return result;
 }
