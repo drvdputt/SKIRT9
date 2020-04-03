@@ -280,7 +280,7 @@ namespace
 
         // calculate and store the opacity; the opacity table is indexed on wavelength, so we need to
         // flip the result around
-        const Array& opacity_nu = _gi->opacity(_statev[m], true);
+        const Array& opacity_nu = _gi->opacityWithLines(_statev[m], jnu, t_grainInterface, true, false, true);
         for (size_t ell = 0; ell < opacity_nu.size(); ell++)
             _opacityvv(m, ell) = opacity_nu[opacity_nu.size() - 1 - ell];
 
