@@ -293,7 +293,7 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
         mediumSystem()->updateGas();
         // Set to true after the gas has been calculated for the first time, and the withSecondary
         // option was given.
-        doSecondary = withSecondary;
+        doSecondary = withSecondary && iter >= 2;
     }
     // if the loop runs out, convergence was not reached even after the maximum number of iterations
     log()->error("Convergence not yet reached after " + std::to_string(maxIters) + " iterations");
