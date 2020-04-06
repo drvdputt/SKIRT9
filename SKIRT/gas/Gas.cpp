@@ -449,7 +449,7 @@ int Gas::indexForLambda(double lambda)
 Array Gas::emissivity(int m)
 {
 #ifdef BUILD_WITH_GAS
-    return nuToLambda(_gi->eFrequencyv(), _gi->emissivity(_statev[m], true));
+    return nuToLambda(_gi->eFrequencyv(), _gi->emissivityBasic(_statev[m], true));
 #else
     (void)m;
     return Array;
