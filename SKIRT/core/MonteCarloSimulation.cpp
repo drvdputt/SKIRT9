@@ -267,16 +267,16 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
 
             bool allZero = LabsPrimgas <= 0. && LabsPrimdust <= 0. && LabsSecgas <= 0. && LabsSecdust <= 0.;
 
-            auto isSmallFraction = [](double value, double reference, double epsilon) {
+            auto isSmallChange = [](double value, double reference, double epsilon) {
                 return abs((value - reference) / reference) < epsilon;
             };
 
-            bool primConverged = isSmallFraction(LabsPrimdust, prevLabsPrimdust, fractionOfPreviousdust)
-                                 && isSmallFraction(LabsPrimgas, prevLabsPrimgas, fractionOfPreviousgas);
-            bool secConverged = isSmallFraction(LabsSecdust, prevLabsSecdust, fractionOfPreviousdust)
-                                && isSmallFraction(LabsSecgas, prevLabsSecgas, fractionOfPreviousgas);
-            bool secSmall = isSmallFraction(LabsSecdust, LabsPrimdust, fractionOfPrimarydust)
-                            && isSmallFraction(LabsSecgas, LabsPrimgas, fractionOfPrimarygas);
+            bool primConverged = isSmallChange(LabsPrimdust, prevLabsPrimdust, fractionOfPreviousdust)
+                                 && isSmallChange(LabsPrimgas, prevLabsPrimgas, fractionOfPreviousgas);
+            bool secConverged = isSmallChange(LabsSecdust, prevLabsSecdust, fractionOfPreviousdust)
+                                && isSmallChange(LabsSecgas, prevLabsSecgas, fractionOfPreviousgas);
+            bool secSmall = (LabsSecdust < LabsPrimdust * fractionOfPrimarydust)
+                            && (LabsSecgas < LabsPrimgas * fractionOfPrimarygas);
 
             if (allZero || (primConverged && secConverged) || (primConverged && secSmall))
             {
