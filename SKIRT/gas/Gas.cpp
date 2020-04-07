@@ -7,6 +7,7 @@
 #include "ProcessManager.hpp"
 #include "StringUtils.hpp"
 #include "Table.hpp"
+#include <fstream>
 
 #ifdef BUILD_WITH_GAS
 #    include "GasDiagnostics.hpp"
@@ -18,13 +19,14 @@
 
 // note: (at least) all code using stuff related to GasInterface or the GasState vector should be
 // wrapped in ifdef BUILD_WITH_GAS. The rest can be compiled and remain uninitialized. (Leaving the
-// rest be might help a bit with the proliferation of macro's here.
+// rest be might help a bit with the proliferation of macro's here.)
 
 namespace
 {
     // set during initialize
     // ---------------------
-
+    std::ofstream _gasLog;
+    int _iterationCount{0};
     Array _lambdav;   // wavelengths given at initialization
     Array _olambdav;  // wavelengths for determining the index in the opacity table
     Array _elambdav;  // wavelengths for calculating the emission
@@ -165,6 +167,9 @@ namespace
 void Gas::initialize(const Array& lambdav, const std::vector<DustInfo>& dustinfov, const Array& emissionWLG)
 {
 #ifdef BUILD_WITH_GAS
+    // open log file
+    _gasLog.open("gas_log.txt");
+
     if (_gi) FATALERROR("Gas module should be initialized exactly once");
 
     _lambdav = lambdav;
@@ -218,6 +223,7 @@ void Gas::finalize()
 #ifdef BUILD_WITH_GAS
     delete _gi;
     _gi = nullptr;
+    _gasLog.close();
 #endif
 }
 
@@ -261,6 +267,15 @@ namespace
     void updateGasState_impl(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv,
                              GasModule::GasDiagnostics* gasDiagnostics)
     {
+        // write out rf for a certain cell, count iterations assuming that every m is only called
+        // once per iteration
+        if (m == 600)
+        {
+            _iterationCount++;
+            _gasLog << _iterationCount;
+            for (size_t ell = 0; ell != meanIntensityv.size(); ++ell) _gasLog << '\t' << meanIntensityv[ell];
+            _gasLog << '\n';
+        }
 
         auto start = std::chrono::high_resolution_clock::now();
         const Array& iFrequencyv = _gi->iFrequencyv();
@@ -278,7 +293,7 @@ namespace
         if (verbose && countzeros) std::cout << countzeros << " zeros in cell " << m << '\n';
 
         // prepare grain info for this cell
-        setThreadLocalGrainDensities(mixNumberDensv, verbose);
+        setThreadLocalGrainDensities(mixNumberDensv, false);
 
         // calculate the equilibrium
         _gi->updateGasState(_statev[m], n * 1.e-6, jnu, t_grainInterface, gasDiagnostics);
