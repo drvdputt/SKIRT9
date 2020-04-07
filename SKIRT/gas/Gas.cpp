@@ -463,7 +463,7 @@ Array Gas::emissivity(int m)
 
 ////////////////////////////////////////////////////////////////////
 
-Array Gas::emissivity(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv)
+Array Gas::emissivity(int m, const Array& meanIntensityv, const Array& mixNumberDensv)
 {
     const Array& jnu = meanIntensityvToJnuCGS(meanIntensityv);
     setThreadLocalGrainDensities(mixNumberDensv, false);

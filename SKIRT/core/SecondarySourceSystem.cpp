@@ -441,10 +441,6 @@ namespace
     private:
         void calculateSingleSpectrum(const Array& Jv, int m)
         {
-            double n = 0;
-            for (int h = 0; h != _ms->numMedia(); ++h)
-                if (_ms->isGas(h)) n += _ms->numberDensity(m, h);
-
             auto hv = Gas::hIndices();
             Array nv(hv.size());
             int c = 0;
@@ -454,7 +450,7 @@ namespace
                 c++;
             }
 
-            Array ev = Gas::emissivity(m, n, Jv, nv);
+            Array ev = Gas::emissivity(m, Jv, nv);
             NR::cdf<NR::interpolateLogLog>(_lambdav, _pv, _Pv, _wavelengthGrid, ev, _wavelengthRange);
         }
 

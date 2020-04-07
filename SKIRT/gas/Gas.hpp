@@ -124,7 +124,7 @@ public:
         given at initialization, with emission lines included. Some quantities have to be
         recalculated to obtain the line ratios. Therefore the radiation field and grain densities
         have to be provided in the same format as updateGasState */
-    static Array emissivity(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv);
+    static Array emissivity(int m, const Array& meanIntensityv, const Array& mixNumberDensv);
 };
 
 #endif
