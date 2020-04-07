@@ -96,6 +96,16 @@ namespace
         return xv_inv_flip;
     }
 
+    /** Convert the SKIRT meanIntensityv from wavelength to frequency units and then to CGS. */
+    Array meanIntensityvToJnuCGS(const Array& meanIntensityv)
+    {
+        // unit conversion:
+        // for gas module: erg s-1 cm-2 sr-1 Hz-1
+        // for skirt     : J   s-1 m-2  sr-1 Hz-1
+        //                 7   0   -4
+        return 1.e3 * lambdaToNu(_lambdav, meanIntensityv);
+    }
+
     // Get an array of grain number densities [cm-3] corresponding to dustInfo i with mix number
     // density mixNumberDens [m-3] (n in MediumSystem)
     Array mixNumberDensToGrainDensityv(int i, double mixNumberDens)
@@ -258,12 +268,7 @@ namespace
         if (iFrequencyv.size() != meanIntensityv.size())
             throw FATALERROR("Something went wrong with the wavelength/frequency grids");
 
-        Array jnu = lambdaToNu(_lambdav, meanIntensityv);
-        // unit conversion:
-        // for gas module: erg s-1 cm-2 sr-1 Hz-1
-        // for skirt     : J   s-1 m-2  sr-1 Hz-1
-        //                 7   0   -4
-        jnu *= 1.e3;
+        const Array& jnu = meanIntensityvToJnuCGS(meanIntensityv);
 
         size_t countzeros = 0;
         for (size_t i = 0; i < iFrequencyv.size(); i++)
