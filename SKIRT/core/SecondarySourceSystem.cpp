@@ -434,14 +434,27 @@ namespace
             }
             _p = p;
             int m = mv[p];
-            calculateSingleSpectrum(m);
+            calculateSingleSpectrum(_ms->meanIntensity(m), m);
             _bfv = ms->bulkVelocity(m);
         }
 
     private:
-        void calculateSingleSpectrum(int m)
+        void calculateSingleSpectrum(const Array& Jv, int m)
         {
-            Array ev = Gas::emissivity(m);
+            double n = 0;
+            for (int h = 0; h != _ms->numMedia(); ++h)
+                if (_ms->isGas(h)) n += _ms->numberDensity(m, h);
+
+            auto hv = Gas::hIndices();
+            Array nv(hv.size());
+            int c = 0;
+            for (int h : hv)
+            {
+                nv[c] = _ms->numberDensity(m, h);
+                c++;
+            }
+
+            Array ev = Gas::emissivity(m, n, Jv, nv);
             NR::cdf<NR::interpolateLogLog>(_lambdav, _pv, _Pv, _wavelengthGrid, ev, _wavelengthRange);
         }
 

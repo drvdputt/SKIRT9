@@ -26,8 +26,8 @@ public:
         // separately for each size given here, and then summed). Integrating everything over the
         // grain size distribution is not doable for most processes in the gas code.
         Array sizev;
-        Array numberDensRatiov;        // Number of grains 'per hydrogen atom' for each size 
-        std::vector<Array> qabsvv;         // Q_abs(a, nu), indexed on (size, frequency)
+        Array numberDensRatiov;     // Number of grains 'per hydrogen atom' for each size
+        std::vector<Array> qabsvv;  // Q_abs(a, nu), indexed on (size, frequency)
     };
 
     /** Initialize the gas module. Should be called exactly once, before any other functions of
@@ -115,8 +115,16 @@ public:
 
     /** This function calculates the emissivity (W m-3 sr-1 m-1) on the wavelength grid that was
         given at initialization, using the gas state stored at index m. This quantity is evaluated
-        for the wavelengths in the emissivity wavelength grid given at initialization. */
+        for the wavelengths in the emissivity wavelength grid given at initialization. The result
+        only includes the continuum emission, and hence only the basic details of the gas are
+        needed. */
     static Array emissivity(int m);
+
+    /** This function calculates the emissivity (W m-3 sr-1 m-1) on the wavelength grid that was
+        given at initialization, with emission lines included. Some quantities have to be
+        recalculated to obtain the line ratios. Therefore the radiation field and grain densities
+        have to be provided in the same format as updateGasState */
+    static Array emissivity(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv);
 };
 
 #endif

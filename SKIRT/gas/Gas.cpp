@@ -462,3 +462,11 @@ Array Gas::emissivity(int m)
 }
 
 ////////////////////////////////////////////////////////////////////
+
+Array Gas::emissivity(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv)
+{
+    const Array& jnu = meanIntensityvToJnuCGS(meanIntensityv);
+    setThreadLocalGrainDensities(mixNumberDensv, false);
+    const Array& enu = _gi->emissivityWithLines(_statev[m], jnu, t_grainInterface, true, true, true);
+    return nuToLambda(_gi->eFrequencyv(), enu);
+}
