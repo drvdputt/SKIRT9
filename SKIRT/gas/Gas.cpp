@@ -267,19 +267,21 @@ namespace
     void updateGasState_impl(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv,
                              GasModule::GasDiagnostics* gasDiagnostics)
     {
-        // write out rf for a certain cell, count iterations assuming that every m is only called
-        // once per iteration
-        if (m == 600)
+        auto start = std::chrono::high_resolution_clock::now();
+
+        // write out some quantities for a certain cell each iteration; count iterations assuming
+        // that every m is only called once per iteration.
+        bool logThisCell{m == 600};
+        GasModule::GasDiagnostics tempGasDiagnostics;
+        if (logThisCell)
         {
-            _iterationCount++;
-            _gasLog << _iterationCount;
-            for (size_t ell = 0; ell != meanIntensityv.size(); ++ell) _gasLog << '\t' << meanIntensityv[ell];
-            _gasLog << '\n';
+            //     for (size_t ell = 0; ell != meanIntensityv.size(); ++ell) _gasLog << '\t' << meanIntensityv[ell];
+            //     _gasLog << '\n';
+            //
+            if (!gasDiagnostics) gasDiagnostics = &tempGasDiagnostics;
         }
 
-        auto start = std::chrono::high_resolution_clock::now();
         const Array& iFrequencyv = _gi->iFrequencyv();
-
         if (iFrequencyv.size() != meanIntensityv.size())
             throw FATALERROR("Something went wrong with the wavelength/frequency grids");
 
@@ -303,6 +305,29 @@ namespace
         const Array& opacity_nu = _gi->opacityWithLines(_statev[m], jnu, t_grainInterface, true, false, true);
         for (size_t ell = 0; ell < opacity_nu.size(); ell++)
             _opacityvv(m, ell) = opacity_nu[opacity_nu.size() - 1 - ell];
+
+        if (logThisCell)
+        {
+            _iterationCount++;
+
+            vector<string> extraKeys = {"BigH2 cont diss", "BigH2 solo diss"};
+
+                // write header line if necessary
+            if (_iterationCount == 1)
+            {
+                _gasLog << "#iteration";
+                for (auto s : gasDiagnostics->reactionNames()) _gasLog << '\t' << s;
+                for (auto s : extraKeys) _gasLog << '\t' << s;
+                _gasLog << '\n';
+            }
+
+            // write data
+            _gasLog << _iterationCount;
+
+            for (auto d : gasDiagnostics->reactionRates()) _gasLog << '\t' << d;
+            for (auto key : extraKeys) _gasLog << '\t' << gasDiagnostics->userValue(key);
+            _gasLog << '\n';
+        }
 
         if (verbose)
         {
