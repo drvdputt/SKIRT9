@@ -681,7 +681,19 @@ void MediumSystem::updateGas()
         });
         Gas::communicateResults();
     }
-    // dust destruction things can also go in this function
+    // dust destruction things could in principle also go in this function
+}
+
+////////////////////////////////////////////////////////////////////
+
+Array MediumSystem::gasTemperatures() const
+{
+    Array result(_numCells);
+    if (hasGas())
+    {
+        for (int m = 0; m < _numCells; m++) result[m] = Gas::temperature(m);
+    }
+    return result;
 }
 
 ////////////////////////////////////////////////////////////////////

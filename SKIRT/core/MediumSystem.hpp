@@ -404,6 +404,10 @@ public:
         medium. */
     void updateGas();
 
+    /** This function returns an array containing the current gas temperature for each cell. If no
+        gas is present in the simulation, an array of zeros is returned instead. */
+    Array gasTemperatures() const;
+
     //================== Private Types and Functions ====================
 
 private:

@@ -170,6 +170,7 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
     double prevLabsPrimdust = 0;
     double prevLabsSecgas = 0.;
     double prevLabsSecdust = 0.;
+    Array previousTemperaturev(_mediumSystem->numCells());
 
     double fractionOfPreviousgas = _config->opacityIterationMaxFractionOfPreviousGas();
     double fractionOfPreviousdust = _config->opacityIterationMaxFractionOfPreviousDust();
@@ -249,6 +250,8 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
                         + units()->ubolluminosity());
         }
 
+        Array temperaturev = _mediumSystem->gasTemperatures();
+
         if (iter < minIters)
         {
             log()->info("Continuing until " + std::to_string(minIters) + " iterations have been performed");
@@ -259,11 +262,13 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
             // hold:
             // - all absorbed luminosities are 0
             // - the absorbed primary luminosity by both dust and gas have changed by less than a
-            //   given fraction AND at least one of the following conditions holds:
-            //   + the absorbed secondary luminosity by both dust and gas have changed by less than
-            //     a given fraction
-            //   + the absorbed secondary luminosity by both dust and gas is less than a given
-            //     fraction of the absorbed primary luminosity for the respective components
+            //   given fraction
+            //   AND at least one of the following conditions holds:
+            //     + the absorbed secondary luminosity by both dust and gas have changed by less than
+            //       a given fraction
+            //     + the absorbed secondary luminosity by both dust and gas is less than a given
+            //       fraction of the absorbed primary luminosity for the respective components
+            //   AND all gas temperatures have changed by less than a given fraction
 
             bool allZero = LabsPrimgas <= 0. && LabsPrimdust <= 0. && LabsSecgas <= 0. && LabsSecdust <= 0.;
 
@@ -278,9 +283,14 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
             bool secSmall = (LabsSecdust < LabsPrimdust * fractionOfPrimarydust)
                             && (LabsSecgas < LabsPrimgas * fractionOfPrimarygas);
 
-            if (allZero || (primConverged && secConverged) || (primConverged && secSmall))
+            Array deltaT = abs(temperaturev - previousTemperaturev) / previousTemperaturev;
+            int tempsNotConverged =
+                std::count_if(std::begin(deltaT), std::end(deltaT), [](double d) { return d > 0.03; });
+            log()->info("Temperature not yet converged for " + StringUtils::toString(tempsNotConverged) + " cells");
+
+            if (allZero || (primConverged && (secConverged || secSmall) && tempsNotConverged == 0))
             {
-                log()->info("Convergence reached after " + std::to_string(iter) + " iterations");
+                log()->info("Convergence reached after " + StringUtils::toString(iter) + " iterations");
                 return;  // end the iteration by returning from the function
             }
         }
@@ -288,6 +298,7 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
         prevLabsPrimgas = LabsPrimgas;
         prevLabsSecdust = LabsSecdust;
         prevLabsSecgas = LabsSecgas;
+        previousTemperaturev = temperaturev;
 
         // Now update the opacities
         mediumSystem()->updateGas();
