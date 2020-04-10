@@ -310,14 +310,12 @@ namespace
         {
             _iterationCount++;
 
-            vector<string> extraKeys = {"BigH2 cont diss", "BigH2 solo diss"};
-
-                // write header line if necessary
+            // write header line if necessary
             if (_iterationCount == 1)
             {
                 _gasLog << "#iteration";
                 for (auto s : gasDiagnostics->reactionNames()) _gasLog << '\t' << s;
-                for (auto s : extraKeys) _gasLog << '\t' << s;
+                for (auto name_value : gasDiagnostics->userValues()) _gasLog << '\t' << name_value.first;
                 _gasLog << '\n';
             }
 
@@ -325,7 +323,7 @@ namespace
             _gasLog << _iterationCount;
 
             for (auto d : gasDiagnostics->reactionRates()) _gasLog << '\t' << d;
-            for (auto key : extraKeys) _gasLog << '\t' << gasDiagnostics->userValue(key);
+            for (auto name_value : gasDiagnostics->userValues()) _gasLog << '\t' << name_value.second;
             _gasLog << '\n';
         }
 
