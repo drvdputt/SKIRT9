@@ -286,9 +286,11 @@ void MonteCarloSimulation::runSelfConsistentOpacityPhase()
             Array deltaT = abs(temperaturev - previousTemperaturev) / previousTemperaturev;
             int tempsNotConverged =
                 std::count_if(std::begin(deltaT), std::end(deltaT), [](double d) { return d > 0.03; });
-            log()->info("Temperature not yet converged for " + StringUtils::toString(tempsNotConverged) + " cells");
+            int tolerance = _mediumSystem->numCells() / 100;
+            log()->info("Temperature not yet converged for " + StringUtils::toString(tempsNotConverged)
+                        + " cells (stopping when <= " + StringUtils::toString(tolerance) + ")");
 
-            if (allZero || (primConverged && (secConverged || secSmall) && tempsNotConverged == 0))
+            if (allZero || (primConverged && (secConverged || secSmall) && tempsNotConverged <= tolerance))
             {
                 log()->info("Convergence reached after " + StringUtils::toString(iter) + " iterations");
                 return;  // end the iteration by returning from the function
