@@ -372,6 +372,12 @@ vector<double> Gas::diagnostics(int m, double n, const Array& meanintensityv, co
     for (auto& pair : gasDiagnostics.heating()) result.emplace_back(pair.second);
     for (auto& pair : gasDiagnostics.cooling()) result.emplace_back(pair.second);
     for (auto& d : gasDiagnostics.reactionRates()) result.emplace_back(d);
+
+    // cherry pick these from the extras (hardcoded because subject to change)
+    const auto& extra = gasDiagnostics.userValues();
+    result.emplace_back(extra.at("H2 contdiss"));
+    result.emplace_back(extra.at("H2 solomon"));
+
 #else
     (void)m;
     (void)n;
@@ -398,6 +404,10 @@ vector<string> Gas::diagnosticNames()
     for (auto& pair : gasDiagnostics.heating()) result.emplace_back(pair.first);
     for (auto& pair : gasDiagnostics.cooling()) result.emplace_back(pair.first);
     for (auto& s : gasDiagnostics.reactionNames()) result.emplace_back(s);
+
+    // add names of hardcoded stuff added in the above function
+    result.emplace_back("H2 contdiss");
+    result.emplace_back("H2 solomon");
 #endif
     return result;
 }
