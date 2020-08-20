@@ -4,7 +4,7 @@
 # //////////////////////////////////////////////////////////////////
 
 # ------------------------------------------------------------------
-# All the code which directly accesses the gas module is built as a
+# All the code which directly accesses RADAGAST is built as a
 # separate library. This allows users who are not interested in gas,
 # to build the code without having to download build the gas module.
 # ------------------------------------------------------------------
@@ -29,24 +29,24 @@ include_directories(../../SMILE/fundamentals)
 
 # define a user-configurable option to build with gas support, which
 # requires the compiled gas module to be present on the system
-option(BUILD_WITH_GAS "build with gas support - requires gas module installed at GASMODULE_INSTALL_DIR")
+option(BUILD_WITH_GAS "build with gas support - requires gas module installed at RADAGAST_INSTALL_DIR")
 
 # if requested, find gas module installation and configure accordingly
 if (BUILD_WITH_GAS)
   # find and configure gas module.
-  if (NOT DEFINED GASMODULE_INSTALL_DIR)
-    message("Please set GASMODULE_INSTALL_DIR - trying /usr/local/ by default")
-    set(GASMODULE_INSTALL_DIR "/usr/local")
+  if (NOT DEFINED RADAGAST_INSTALL_DIR)
+    message("Please set RADAGAST_INSTALL_DIR - trying /usr/local/ by default")
+    set(RADAGAST_INSTALL_DIR "/usr/local")
   endif()
-  message("Looking for gas module in ${GASMODULE_INSTALL_DIR}")
-  find_library(GASMODULE_LIBRARIES
-    NAMES libgasmodule.a
-    PATHS "${GASMODULE_INSTALL_DIR}/lib")
-  find_path(GASMODULE_INCLUDE_PATH
+  message("Looking for gas module in ${RADAGAST_INSTALL_DIR}")
+  find_library(RADAGAST_LIBRARIES
+    NAMES libradagast.a
+    PATHS "${RADAGAST_INSTALL_DIR}/lib")
+  find_path(RADAGAST_INCLUDE_PATH
     NAMES "GasInterface.hpp"
-    PATHS "${GASMODULE_INSTALL_DIR}/include")
-  target_link_libraries(${TARGET} ${GASMODULE_LIBRARIES})
-  include_directories(${GASMODULE_INCLUDE_PATH})
+    PATHS "${RADAGAST_INSTALL_DIR}/include")
+  target_link_libraries(${TARGET} ${RADAGAST_LIBRARIES})
+  include_directories(${RADAGAST_INCLUDE_PATH})
   # add the C++ preprocessor symbol that triggers compilation with gas
   add_definitions(-DBUILD_WITH_GAS)
 

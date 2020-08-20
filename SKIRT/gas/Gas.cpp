@@ -31,7 +31,7 @@ namespace
     Array _olambdav;  // wavelengths for determining the index in the opacity table
     Array _elambdav;  // wavelengths for calculating the emission
 #ifdef BUILD_WITH_GAS
-    GasModule::GasInterface* _gi;  // instance of GasInterface
+    RADAGAST::GasInterface* _gi;  // instance of GasInterface
 #endif
     std::vector<Gas::DustInfo> _dustinfov;  // information about the dust populations in the simulation
     vector<int> _hIndices;                  // indices which can be returned to help MediumSystem
@@ -40,7 +40,7 @@ namespace
 // set per cell during updateGasState
 // ----------------------------------
 #ifdef BUILD_WITH_GAS
-    std::vector<GasModule::GasState> _statev;  // result of the equilibrium calculation for each cell
+    std::vector<RADAGAST::GasState> _statev;  // result of the equilibrium calculation for each cell
 #endif
     Table<2> _opacityvv;  // opacity(m, ell) for each cell m and wavelength ell
 
@@ -49,15 +49,15 @@ namespace
 
 // translate a SKIRT grain type into one of the built-in grain types
 #ifdef BUILD_WITH_GAS
-    GasModule::GrainTypeLabel stringToGrainTypeLabel(const string& populationGrainType)
+    RADAGAST::GrainTypeLabel stringToGrainTypeLabel(const string& populationGrainType)
     {
         if (StringUtils::contains(populationGrainType, "Silicate"))
-            return GasModule::GrainTypeLabel::SIL;
+            return RADAGAST::GrainTypeLabel::SIL;
         else if (StringUtils::contains(populationGrainType, "Graphite")
                  || StringUtils::contains(populationGrainType, "PAH"))
-            return GasModule::GrainTypeLabel::CAR;
+            return RADAGAST::GrainTypeLabel::CAR;
         else
-            return GasModule::GrainTypeLabel::OTHER;
+            return RADAGAST::GrainTypeLabel::OTHER;
     }
 #endif
 
@@ -120,7 +120,7 @@ namespace
 
     // properly initialized and modified by the first call to setThreadLocalGrainDensities
 #ifdef BUILD_WITH_GAS
-    thread_local GasModule::GrainInterface t_grainInterface;
+    thread_local RADAGAST::GrainInterface t_grainInterface;
     thread_local bool t_gr_is_ready{false};
     void setThreadLocalGrainDensities(const Array& mixNumberDensv, bool verbose)
     {
@@ -201,9 +201,9 @@ void Gas::initialize(const Array& lambdav, const std::vector<DustInfo>& dustinfo
     for (int ell = 1; ell != numLambda; ++ell) _olambdav[ell] = sqrt(lambdav[ell] * lambdav[ell - 1]);
 
     // Turn off error handling (otherwise, gas module can call abort)
-    GasModule::GasInterface::errorHandlersOff();
+    RADAGAST::GasInterface::errorHandlersOff();
     // Initialize the gas module
-    _gi = new GasModule::GasInterface(iFrequencyv, iFrequencyv, eFrequencyv);
+    _gi = new RADAGAST::GasInterface(iFrequencyv, iFrequencyv, eFrequencyv);
 
     // retrieve some useful indices
     _ip = _gi->index("H+");
@@ -244,7 +244,7 @@ void Gas::allocateGasStates(size_t num)
 bool Gas::hasGrainTypeSupport(const string& populationGrainType)
 {
 #ifdef BUILD_WITH_GAS
-    return stringToGrainTypeLabel(populationGrainType) != GasModule::GrainTypeLabel::OTHER;
+    return stringToGrainTypeLabel(populationGrainType) != RADAGAST::GrainTypeLabel::OTHER;
 #else
     (void)populationGrainType;
     return false;
@@ -265,14 +265,14 @@ namespace
 {
     // implementation of updateGasState, with optional GasDiagnostics pointer
     void updateGasState_impl(int m, double n, const Array& meanIntensityv, const Array& mixNumberDensv,
-                             GasModule::GasDiagnostics* gasDiagnostics)
+                             RADAGAST::GasDiagnostics* gasDiagnostics)
     {
         auto start = std::chrono::high_resolution_clock::now();
 
         // write out some quantities for a certain cell each iteration; count iterations assuming
         // that every m is only called once per iteration.
         bool logThisCell{m == 600};
-        GasModule::GasDiagnostics tempGasDiagnostics;
+        RADAGAST::GasDiagnostics tempGasDiagnostics;
         if (logThisCell)
         {
             //     for (size_t ell = 0; ell != meanIntensityv.size(); ++ell) _gasLog << '\t' << meanIntensityv[ell];
@@ -359,7 +359,7 @@ vector<double> Gas::diagnostics(int m, double n, const Array& meanintensityv, co
     vector<double> result;
 #ifdef BUILD_WITH_GAS
     // recalculate the gas state and extract diagnostics (expensive)
-    GasModule::GasDiagnostics gasDiagnostics;
+    RADAGAST::GasDiagnostics gasDiagnostics;
     updateGasState_impl(m, n, meanintensityv, mixNumberDensv, &gasDiagnostics);
 
     // Gather the results; note that each map (e.g. gd.heating() and gd.cooling()) should contain
@@ -394,9 +394,9 @@ vector<string> Gas::diagnosticNames()
     vector<string> result;
 #ifdef BUILD_WITH_GAS
     // do a dummy calculation to get a gasdiagnostics object and figure out the names
-    GasModule::GasState gasState;
-    GasModule::GasDiagnostics gasDiagnostics;
-    GasModule::GrainInterface grainInterface;
+    RADAGAST::GasState gasState;
+    RADAGAST::GasDiagnostics gasDiagnostics;
+    RADAGAST::GrainInterface grainInterface;
     _gi->updateGasState(gasState, 0, Array(_gi->iFrequencyv().size()), grainInterface, &gasDiagnostics);
 
     // heating, cooling, reaction rates, hopefully in the same order as

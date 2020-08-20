@@ -16,7 +16,7 @@
     cell in the spatial grid. Each line contains the cell index and the coordinates of the center
     of the cell, followed by the properties. When \c extendedDiagnostics is enabled, the
     equilibrium calculation will be re-done, but with the diagnostic option enabled (see \c
-    GasDiagnostics* argument of \c GasModule::GasInterface::updateGasState). Many more columns will
+    GasDiagnostics* argument of \c RADAGAST::GasInterface::updateGasState). Many more columns will
     be added to the output file, including (but not limited to) the heating and cooling
     contributions, formation and destruction rates of certain species, and the adjusted grain
     temperature used internally by the gas code. */
